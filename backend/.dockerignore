@@ -1,0 +1,8 @@
+*.bak
+*.log
+test
+log
+db
+data
+.git
+.gitignore

@@ -1,0 +1,66 @@
+version: "3"
+
+services:
+
+  db:
+    image: mariadb
+    container_name: library_db
+    environment:
+      MYSQL_ROOT_PASSWORD: library
+      MYSQL_DATABASE: library
+      MYSQL_USER: library
+      MYSQL_PASSWORD: library
+      MYSQL_ROOT_HOST: '%'
+    # volumes:
+    #     - ./db/data:/var/lib/mysql
+    restart: on-failure
+    ports:
+      - "3306:3306"
+
+
+  frontend:
+    container_name: library_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    # volumes:
+    #   - './frontend:/app'
+    ports:
+      - '8080:80'
+    depends_on:
+      - backend
+
+
+  backend:
+    container_name: library_backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # volumes:
+    #   - './backend:/app'
+    restart: on-failure
+    ports:
+      - '8081:8081'
+    depends_on:
+      - db
+
+      
+  eventstore:
+    container_name: library_eventstore
+    image: eventstore/eventstore
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=None
+      # - EVENTSTORE_GOSSIP_SEED=172.18.0.12:2112,172.18.0.13:2112,172.18.0.14:2112,172.18.0.15:2112
+      # - EVENTSTORE_NODE_PRIORITY=3
+      # - EVENTSTORE_INT_IP=172.16.0.11
+      - EVENTSTORE_EXT_HTTP_PORT=2113
+      - EVENTSTORE_EXT_TCP_PORT=1113
+      - EVENTSTORE_EXT_HTTP_PREFIXES=http://*:2113/
+    # volumes:
+    #   - "./data/db:/data/db"
+    #   - "./data/logs:/data/logs"
+    ports:
+      - 1113:1113
+      - 2113:2113
+    restart: always
